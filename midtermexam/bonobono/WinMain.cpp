@@ -16,7 +16,7 @@ bool showBonobono = false;
 bool isCrossedEyes = false;
 
 // 스페이스바가 눌렸는지 여부를 나타내는 변수
-bool spaceBarPressed = false;
+bool blink = false;
 
 // 윈도우 프로시저 함수
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
@@ -83,7 +83,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 
     case WM_KEYDOWN:
         if (wParam == VK_SPACE) {
-            spaceBarPressed = true;
+            blink = true;
             isCrossedEyes = true; // 스페이스바를 누를 때 눈 교차
             InvalidateRect(hWnd, NULL, TRUE);
         }
@@ -91,7 +91,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 
     case WM_KEYUP:
         if (wParam == VK_SPACE) {
-            spaceBarPressed = false;
+            blink = false;
             isCrossedEyes = false; // 스페이스바를 뗄 때 눈 교차 해제
             InvalidateRect(hWnd, NULL, TRUE);
         }
@@ -137,7 +137,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
             DeleteObject(faceBrush);
 
 
-            if (spaceBarPressed) {
+            if (blink) {
                 HPEN eyeBrush = CreatePen(PS_SOLID, 2, RGB(0, 0, 0));
                 SelectObject(hdc, eyeBrush);
 

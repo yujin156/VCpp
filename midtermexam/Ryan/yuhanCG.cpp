@@ -12,10 +12,10 @@ struct CustomShape {
     int shapeType;  // 도형의 타입 (0: 사각형)
 };
 
-int blink = 0; // 눈을 선으로 그릴지 여부
+//int blink = 0; // 눈을 선으로 그릴지 여부
 
 bool isCrossedEyes = false;
-bool spaceBarPressed = false;
+bool blink = false;
 bool isDrawing = false;
 HDC globalHdc = NULL;
 
@@ -144,6 +144,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
             currentShapeType = 2;
             showBonobono = true;
             InvalidateRect(hWnd, NULL, TRUE); // 창을 즉시 다시 그리기
+            SetFocus(hWnd);
             break;;
         }
         break;
@@ -151,7 +152,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 
     case WM_KEYDOWN:
         if (wParam == VK_SPACE) {
-            spaceBarPressed = true;
+            blink = true;
             isCrossedEyes = true;
             InvalidateRect(hWnd, NULL, TRUE);
         }
@@ -159,7 +160,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 
     case WM_KEYUP:
         if (wParam == VK_SPACE) {
-            spaceBarPressed = false;
+            blink = false;
             isCrossedEyes = false;
             InvalidateRect(hWnd, NULL, TRUE);
         }
