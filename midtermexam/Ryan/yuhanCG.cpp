@@ -1,34 +1,6 @@
-#include <Windows.h>
-#include <tchar.h>
 #include "yuhanCG.h"
-#include <vector>
 
-LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
-int currentShapeType = 0;
-
-struct CustomShape {
-    RECT rect;      // 도형의 위치와 크기
-    int shapeType;  // 도형의 타입 (0: 사각형)
-};
-
-//int blink = 0; // 눈을 선으로 그릴지 여부
-
-bool isCrossedEyes = false;
-bool blink = false;
-bool isDrawing = false;
-HDC globalHdc = NULL;
-
-POINT dragStartPoint = { 0 };
-POINT dragEndPoint = { 0 };
-
-RECT previousRect = { 0 }; // 이전에 그린 사각형을 저장할 변수
-
-std::vector<CustomShape> shapes; // 그린 도형을 저장할 벡터
-
-
-
-void DrawShapes(HWND hWnd, HDC hdc) {
+void DShape(HWND hWnd, HDC hdc) {
     for (size_t i = 0; i < shapes.size(); i++) {
         HBRUSH hBrush = NULL; // hBrush를 NULL로 초기화
 
@@ -37,14 +9,6 @@ void DrawShapes(HWND hWnd, HDC hdc) {
             SelectObject(hdc, hBrush);
             Rectangle(hdc, shapes[i].rect.left, shapes[i].rect.top, shapes[i].rect.right, shapes[i].rect.bottom);
         }
-        /*else if (shapes[i].shapeType == 1) { // "Circle" 모양 그리기 처리
-            int centerX = 200; // 원의 중심 X 좌표
-            int centerY = 200; // 원의 중심 Y 좌표
-            int radius = 50;   // 원의 반지름
-
-            // 원 그리기
-            DrawCircle(hdc, centerX, centerY, radius);
-        }*/
         else if (shapes[i].shapeType == 1) { // "Circle" 모양 그리기 처리
             if (showBonobono) { // showBonobono 플래그가 true일 때만 보노보노 얼굴을 그리도록 수정
                 DrawBonobono(hWnd, hdc, blink);
@@ -118,18 +82,21 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
             currentShapeType = 0;
             shapes.clear();
             isDrawing = true;
+            showBonobono = false; // 보노보노 그림 지우기
             SetFocus(hWnd);
             break;
         case 2: // "Circle" 버튼을 눌렀을 때
             currentShapeType = 1; // Circle 버튼을 누르면 원을 그리도록 설정
-            showBonobono = true;
-            InvalidateRect(hWnd, NULL, TRUE); // Force immediate redraw
+            shapes.clear(); // 저장된 모든 도형을 지움
+            showBonobono = true; 
+            InvalidateRect(hWnd, NULL, TRUE);
             SetFocus(hWnd);
             break;
         case 3: // "Bonobono" 버튼을 눌렀을 때
             currentShapeType = 2;
-            showBonobono = true;
-            InvalidateRect(hWnd, NULL, TRUE); // Force immediate redraw
+            shapes.clear();
+            isDrawing = true;
+            showBonobono = false; // 보노보노 그림 지우기
             SetFocus(hWnd);
             break;
         case 4:
@@ -137,12 +104,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
             currentShapeType = 3;
             // DrawRyan 함수 호출
             //DrawRyan(hWnd, globalHdc, drawingRect.left, drawingRect.top, drawingRect.right, drawingRect.bottom);
-
+            shapes.clear(); // 저장된 모든 도형을 지움
+            showBonobono = false; // 보노보노 그림 지우기
             SetFocus(hWnd);
             break;
         case 5:
             currentShapeType = 2;
-            showBonobono = true;
+            shapes.clear(); // 저장된 모든 도형을 지움
+            showBonobono = false; // 보노보노 그림 지우기
             InvalidateRect(hWnd, NULL, TRUE); // 창을 즉시 다시 그리기
             SetFocus(hWnd);
             break;;
@@ -173,9 +142,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         // 외부 상자와 내부 상자를 그리는 함수 호출
         DrawOuterAndInnerBoxes(hWnd, hdc);
 
-        // 기존에 그렸던 도형은 DrawShapes를 호출하지 않고 내부 및 외부 상자만 다시 그림
-        if (!isDrawing) {
-            DrawShapes(hWnd, hdc);
+        DShape(hWnd, hdc);
+        if (showBonobono) {
+            // 보노보노 그리기 로직을 여기에 작성하세요
+            DrawBonobono(hWnd, hdc, blink);
         }
 
         EndPaint(hWnd, &ps);
@@ -183,7 +153,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
     }
 
     case WM_LBUTTONDOWN:
-        if (currentShapeType == 0 || currentShapeType == 1) {
+        if (currentShapeType == 0 || currentShapeType == 2) {
             shapes.clear();
             isDrawing = true;
             dragStartPoint.x = LOWORD(lParam);
@@ -207,9 +177,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
                 newShape.rect.bottom = max(dragStartPoint.y, y);
 
                 shapes.push_back(newShape);
-                DrawShapes(hWnd, hdc);
+                DShape(hWnd, hdc);
             }
-            else if (currentShapeType == 1) { // 원 그리기 로직
+            else if (currentShapeType == 2) { // 원 그리기 로직
             // 현재 마우스 위치와 시작점으로 원의 반지름 계산
                 int radius = static_cast<int>(sqrt(pow(x - dragStartPoint.x, 2) + pow(y - dragStartPoint.y, 2)));
 
@@ -221,7 +191,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
                 newShape.rect.bottom = dragStartPoint.y + radius;
 
                 shapes.push_back(newShape);
-                DrawShapes(hWnd, hdc);
+                DShape(hWnd, hdc);
             }
 
             ReleaseDC(hWnd, hdc);
@@ -243,7 +213,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
             InvalidateRect(hWnd, NULL, TRUE);
         }
 
-        if (currentShapeType == 1) { // 원 그리기 로직 완성
+        if (currentShapeType == 2) { // 원 그리기 로직 완성
             int radius = static_cast<int>(sqrt(pow(dragEndPoint.x - dragStartPoint.x, 2) + pow(dragEndPoint.y - dragStartPoint.y, 2)));
 
             CustomShape newShape;

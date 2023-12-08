@@ -1,7 +1,28 @@
 #include <Windows.h>
 #include <tchar.h>
+#include <vector>
+
+LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+int currentShapeType = 0;
+
+struct CustomShape {
+    RECT rect;      // 도형의 위치와 크기
+    int shapeType;  // 도형의 타입 (0: 사각형)
+};
 
 bool showBonobono = false;
+bool isCrossedEyes = false;
+bool blink = false;
+bool isDrawing = false;
+HDC globalHdc = NULL;
+
+POINT dragStartPoint = { 0 };
+POINT dragEndPoint = { 0 };
+
+RECT previousRect = { 0 }; // 이전에 그린 사각형을 저장할 변수
+
+std::vector<CustomShape> shapes; // 그린 도형을 저장할 벡터
 
 RECT drawingRect = { 0 };
 
